@@ -41,6 +41,7 @@ The **Xteink X4 / X4 Pro** uses a 480x800 1-bit monochrome e-ink display requiri
    - **Japanese RTL Order:** Handles Right-to-Left double-page spreads by splitting them into right-half first, then left-half.
    - **Zero-Crop Aspect Scaling:** Ensures 0% text clipping by adaptive padding instead of aggressive cropping.
    - **Cover & Splash Protection:** Preserves full 480x800 single-page splash art and cover renders without panel splitting.
+   - **Fill Screen (optional):** Pages that are within 5% of the screen aspect are stretched imperceptibly to remove thin letterbox bars.
    - **Unsharp Masking & Lanczos4 Resampling:** Enhances contrast and sharpens 6–8pt font letterings for crisp e-ink legibility.
 
 2. **`manhwa2xtc.py` (Manhwa/Webtoon Slicer):**
@@ -50,10 +51,12 @@ The **Xteink X4 / X4 Pro** uses a 480x800 1-bit monochrome e-ink display requiri
    - **Continuous Strip Slicing:** Assembles webtoon images into a continuous vertical strip before performing intelligent slicing into 480x800 e-ink pages.
 
 3. **`gui_converter.py` (Desktop GUI & Real-Time Preview):**
-   - Modern dark-mode interface built with `CustomTkinter`.
-   - **Live Visual Slice Preview:** View real-time dithered page previews before processing the entire folder.
-   - **Batch & Single File Mode:** Convert individual `.cbz` files or entire directories recursively.
-   - Progress bar, status logs, and customizable target directory selection.
+   - Clean interface built with `CustomTkinter`, with Light / Dark / System themes.
+   - **Live E-ink Preview:** Flip through the exact dithered pages (← → keys) on a device mockup before converting.
+   - **Batch & Single File Mode:** Pick a `.cbz` file or a folder; folders are searched recursively and their subfolders are mirrored in the output.
+   - Per-page progress, cancel button, per-file error report and an "Open folder" shortcut. Settings are remembered between sessions.
+
+4. **`xtc_core.py` (Shared core):** CBZ loading (natural page order, transparent PNGs flattened on white), XTG/XTC encoding and the batch runner used by both converters.
 
 ---
 
@@ -66,6 +69,7 @@ O **Xteink X4 / X4 Pro** possui uma tela e-ink monocromática de 480x800 pixels 
    - **Ordem de Leitura Oriental (RTL):** Trata páginas duplas dividindo-as automaticamente da direita para a esquerda.
    - **Preservação Zero-Crop:** Proporção ajustada perfeitamente garantindo 0% de corte em balões de fala ou artes.
    - **Proteção de Capas e Splash Pages:** Detecta automaticamente capas e páginas duplas épicas e mantém a renderização vertical completa sem fatiar.
+   - **Preencher Tela (opcional):** Páginas com proporção até 5% diferente da tela são esticadas de forma imperceptível para eliminar faixas finas nas bordas.
    - **Filtros de Nitidez e Resampling Lanczos4:** Aplica Unsharp Mask e autocontraste para deixar fontes pequenas de 6–8pt perfeitamente legíveis na tela e-ink.
 
 2. **`manhwa2xtc.py` (Fatiador de Manhwa/Webtoon):**
@@ -75,10 +79,12 @@ O **Xteink X4 / X4 Pro** possui uma tela e-ink monocromática de 480x800 pixels 
    - **Fatiamento de Tira Contínua:** Junta as imagens do webtoon em uma tira vertical única antes de realizar os cortes inteligentes de 480x800.
 
 3. **`gui_converter.py` (Interface Gráfica com Preview em Tempo Real):**
-   - Interface moderna em Dark Mode construída com `CustomTkinter`.
-   - **Visualização ao Vivo:** Veja como a página fatiada e pontilhada (dithered) vai ficar no Xteink antes de converter a pasta inteira.
-   - **Modo Lote ou Arquivo Único:** Converta um arquivo `.cbz` isolado ou pastas inteiras com subpastas.
-   - Barra de progresso, logs detalhados e seleção personalizada da pasta de saída.
+   - Interface limpa construída com `CustomTkinter`, com temas Claro / Escuro / Sistema.
+   - **Preview E-ink ao Vivo:** Folheie as páginas exatas (teclas ← →) num mockup do aparelho antes de converter.
+   - **Modo Lote ou Arquivo Único:** Escolha um `.cbz` ou uma pasta; subpastas são percorridas e espelhadas na saída.
+   - Progresso por página, botão de cancelar, relatório de erros por arquivo e atalho "Open folder". As configurações são lembradas entre sessões.
+
+4. **`xtc_core.py` (Núcleo compartilhado):** Leitura de CBZ (ordem natural das páginas, PNG transparente sobre fundo branco), codificação XTG/XTC e o processamento em lote usado pelos dois conversores.
 
 ---
 
@@ -87,10 +93,10 @@ O **Xteink X4 / X4 Pro** possui uma tela e-ink monocromática de 480x800 pixels 
 | Property / Propriedade | Specification / Especificação |
 | :--- | :--- |
 | **Supported OS / SOs Suportados** | **Windows** (10 / 11), **Linux** (Ubuntu, Arch, Debian, Fedora, etc.), **macOS** (Intel & Apple Silicon) |
-| **Python Version** | Python **3.8+** (Recommended: **3.10 / 3.11 / 3.12**) |
+| **Python Version** | Python **3.9+** (tested on 3.9 and 3.13 on Windows, macOS and Linux) |
 | **Target Hardware** | Xteink X4 / X4 Pro (E-ink Display 480x800) |
 | **Output Format** | Binary `.XTC` (56-byte header, 1-bit Floyd-Steinberg dithered XTG pages) |
-| **Input Format** | Comic Book Archive (`.cbz` containing PNG, JPG, WEBP, BMP) |
+| **Input Format** | Comic Book Archive (`.cbz` / `.zip` containing PNG, JPG, WEBP, BMP) |
 | **Core Libraries** | `CustomTkinter`, `Pillow` (PIL), `opencv-python`, `numpy` |
 
 ---
@@ -98,9 +104,13 @@ O **Xteink X4 / X4 Pro** possui uma tela e-ink monocromática de 480x800 pixels 
 ## 🚀 Installation & Setup / Instalação
 
 ### Prerequisites / Pré-requisitos
-Ensure you have Python 3.8 or higher installed on your system.
+Ensure you have Python 3.9 or higher installed on your system.
 
 #### 🪟 Windows Setup
+
+**Quick start:** double-click **`run_gui.bat`**. The first run creates `.venv` and installs the dependencies automatically.
+
+*Or set up manually:*
 
 1. **Open Command Prompt or PowerShell** in the project folder.
 2. **Create and activate a Virtual Environment:**
@@ -122,7 +132,7 @@ Ensure you have Python 3.8 or higher installed on your system.
 #### 🐧 Linux Setup
 
 1. **Open your Terminal** in the project directory.
-2. **Make the launcher script executable and run it:**
+2. **Make the launcher script executable and run it** (the first run creates `.venv` and installs the dependencies):
    ```bash
    chmod +x run_gui.sh
    ./run_gui.sh
@@ -138,6 +148,12 @@ Ensure you have Python 3.8 or higher installed on your system.
 ---
 
 #### 🍏 macOS Setup (Intel & Apple Silicon)
+
+**Quick start:** double-click **`run_gui.command`** in Finder (first run installs everything). If macOS blocks it, run `chmod +x run_gui.command run_gui.sh` once in Terminal.
+
+> Using Homebrew Python? Install Tk support first: `brew install python-tk`
+
+*Or set up manually:*
 
 1. **Open Terminal** in the project folder.
 2. **Create and activate virtual environment:**
@@ -165,8 +181,13 @@ If you prefer processing files via command line or scripts without GUI:
 # Process a single CBZ file
 python manga2xtc.py "path/to/manga_chapter.cbz" -o "path/to/output_dir"
 
-# Process an entire folder of CBZ files
+# Process an entire folder of CBZ files (recursive, subfolders mirrored)
 python manga2xtc.py "path/to/manga_folder/" -o "path/to/output_dir"
+
+# Options
+#   --horizontal       landscape 800x480 instead of portrait 480x800
+#   --no-smart-zoom    keep whole pages (no panel-row re-stacking)
+#   --no-fill-screen   never stretch pages to remove thin bars
 ```
 
 ### Manhwa Conversion (`manhwa2xtc.py`)
@@ -176,6 +197,21 @@ python manhwa2xtc.py "path/to/manhwa_chapter.cbz" -o "path/to/output_dir"
 
 # Process a folder of Manhwa CBZ files
 python manhwa2xtc.py "path/to/manhwa_folder/" -o "path/to/output_dir"
+
+# Landscape 800x480
+python manhwa2xtc.py "path/to/manhwa_chapter.cbz" --horizontal
+```
+
+Both commands exit with code `1` if any file failed to convert.
+
+---
+
+## ✅ Tests
+
+Cross-platform smoke tests (synthetic CBZs, non-ASCII paths, both orientations, byte-level XTC validation and a GUI build test) run on Windows, macOS and Linux via GitHub Actions:
+
+```bash
+python -m unittest discover -s tests -v
 ```
 
 ---
